@@ -1,13 +1,58 @@
+import api from '@/constants/api';
 import { images } from '@/constants/images';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import { EyeClosed, EyeIcon, LockIcon, MailIcon } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  Image,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 export default function Signup() {
-  const [isTapped, setIsTapped] = useState(false);
-  const [isChecked, setIsChecked] = useState(false);
+  const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
+
+  const [formData, setFormData] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    password: '',
+    password_confirmation: '',
+  });
+
+  const handleInputChange = (key: string, value: string) => {
+    setFormData({ ...formData, [key]: value });
+  };
+
+  const registerUser = async () => {
+    if (formData.password !== formData.password_confirmation) {
+      Alert.alert('Error', 'Passwords do not match');
+      return;
+    }
+
+    try {
+      const response = await api.post('/register', formData);
+      const { access_token } = response.data;
+
+      await AsyncStorage.setItem('user_token', access_token);
+
+      Alert.alert('Success', 'Account created successfully!');
+      router.push('/(app)');
+    } catch (error: any) {
+      if (error.response) {
+        Alert.alert('Error', JSON.stringify(error.response.data.errors));
+      } else {
+        Alert.alert('Error', 'Registration failed. Check your connection.');
+      }
+    }
+  };
+
   return (
     <View className="flex-1 justify-center items-center relative">
       <Image source={images.bg} className="w-full z-0 absolute" />
@@ -38,6 +83,7 @@ export default function Signup() {
               <TextInput
                 placeholder="John"
                 placeholderTextColor="#4B4F4B"
+                onChangeText={(text) => handleInputChange('first_name', text)}
                 className="bg-[#0E0E0E] rounded-lg mt-1 font-bold text-base pl-4 text-white border border-[#292929] h-12 relative"
               />
             </View>
@@ -48,6 +94,7 @@ export default function Signup() {
               <TextInput
                 placeholder="Doe"
                 placeholderTextColor="#4B4F4B"
+                onChangeText={(text) => handleInputChange('last_name', text)}
                 className="bg-[#0E0E0E] rounded-lg mt-1 font-bold text-base pl-4 text-white border border-[#292929] h-12 relative"
               />
             </View>
@@ -57,6 +104,7 @@ export default function Signup() {
             <TextInput
               placeholder="you@example.com"
               placeholderTextColor="#4B4F4B"
+              onChangeText={(text) => handleInputChange('email', text)}
               className="bg-[#0E0E0E] rounded-lg mt-1 font-bold text-base pl-11 text-white border border-[#292929] h-12 relative"
             />
             <MailIcon
@@ -71,7 +119,8 @@ export default function Signup() {
             <TextInput
               placeholder="Enter your password..."
               placeholderTextColor="#4B4F4B"
-              secureTextEntry={!isTapped}
+              secureTextEntry={!showPassword}
+              onChangeText={(text) => handleInputChange('password', text)}
               className="bg-[#0E0E0E] rounded-lg mt-1 font-bold text-base pl-11 text-white border border-[#292929] h-12 relative align-middle"
             />
             <LockIcon
@@ -80,9 +129,9 @@ export default function Signup() {
             />
             <View
               className="absolute top-[30px] right-[10px]"
-              onTouchStart={() => setIsTapped(true)}
-              onTouchEnd={() => setIsTapped(false)}>
-              {isTapped ? (
+              onTouchStart={() => setShowPassword(true)}
+              onTouchEnd={() => setShowPassword(false)}>
+              {showPassword ? (
                 <EyeClosed color="#4B4F4B" />
               ) : (
                 <EyeIcon color="#4B4F4B" />
@@ -96,8 +145,11 @@ export default function Signup() {
             <TextInput
               placeholder="Confirm your password..."
               placeholderTextColor="#4B4F4B"
-              secureTextEntry={!isTapped}
+              secureTextEntry={!showPassword}
               className="bg-[#0E0E0E] rounded-lg mt-1 font-bold text-base pl-11 text-white border border-[#292929] h-12 relative align-middle"
+              onChangeText={(text) =>
+                handleInputChange('password_confirmation', text)
+              }
             />
             <LockIcon
               color="#4B4F4B"
@@ -105,9 +157,9 @@ export default function Signup() {
             />
             <View
               className="absolute top-[30px] right-[10px]"
-              onTouchStart={() => setIsTapped(true)}
-              onTouchEnd={() => setIsTapped(false)}>
-              {isTapped ? (
+              onTouchStart={() => setShowPassword(true)}
+              onTouchEnd={() => setShowPassword(false)}>
+              {showPassword ? (
                 <EyeClosed color="#4B4F4B" />
               ) : (
                 <EyeIcon color="#4B4F4B" />
@@ -115,7 +167,9 @@ export default function Signup() {
             </View>
           </View>
           <View>
-            <TouchableOpacity className="w-full h-12 rounded-lg mt-6 justify-center items-center">
+            <TouchableOpacity
+              onPress={registerUser}
+              className="w-full h-12 rounded-lg mt-6 justify-center items-center">
               <LinearGradient
                 colors={['#E82D47', '#EE592E']}
                 start={{ x: 0, y: 0 }}
