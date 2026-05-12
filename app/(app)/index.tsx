@@ -214,9 +214,9 @@ export default function index() {
                 </View>
 
                 <View className="flex-row mb-3">
-                  {weekDays.map((day) => (
+                  {weekDays.map((day, idx) => (
                     <Text
-                      key={day}
+                      key={`${day}-${idx}`}
                       className="text-[11px] text-slate-500 text-center"
                       style={{ width: `${100 / 7}%` }}>
                       {day}
@@ -247,7 +247,7 @@ export default function index() {
 
                     return (
                       <View
-                        key={`${day.label}-${index}`}
+                        key={index}
                         className={`${cellBase} ${cellStyle}`}
                         style={{ width: `${100 / 7}%` }}>
                         <Text className={`${textStyle} text-sm`}>
